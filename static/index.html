@@ -1,0 +1,207 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>NyayaSathi</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/marked/12.0.2/marked.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/dompurify/3.1.6/purify.min.js"></script>
+<style>
+:root{
+  --bg:#f7f5f0;--surface:#fff;--ink:#1d1b18;--muted:#6b665d;--line:#e4dfd4;
+  --accent:#7a2e1f;--accent-ink:#fff;--accent-soft:#f4e7e2;
+  --ok:#1f6b3a;--ok-bg:#e5f3ea;--warn:#8a5a00;--warn-bg:#fbf0d9;--bad:#a1262b;--bad-bg:#fbe5e5;--chip:#eceae4;
+}
+@media (prefers-color-scheme:dark){
+  :root{--bg:#151412;--surface:#1f1d1a;--ink:#ece8e0;--muted:#a39d92;--line:#35322c;
+    --accent:#e08a6f;--accent-ink:#1a0f0b;--accent-soft:#3a2620;
+    --ok:#7fd39a;--ok-bg:#173022;--warn:#f0c46b;--warn-bg:#3a2e14;--bad:#f29b9b;--bad-bg:#3d1c1d;--chip:#2a2824;}
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.6 "Segoe UI",system-ui,-apple-system,sans-serif}
+.wrap{max-width:860px;margin:0 auto;padding:0 16px}
+header{background:var(--surface);border-bottom:1px solid var(--line)}
+.brand{padding:18px 0 4px}
+.brand h1{font:600 24px/1.2 Georgia,serif;margin:0;color:var(--accent)}
+.brand p{margin:2px 0 0;color:var(--muted);font-size:14px}
+nav{display:flex;gap:4px}
+nav button{border:0;background:none;color:var(--muted);font:inherit;font-weight:600;padding:12px 14px;border-bottom:3px solid transparent;cursor:pointer}
+nav button[aria-selected=true]{color:var(--ink);border-bottom-color:var(--accent)}
+main{padding:22px 0 40px}
+.panel{display:none}.panel.active{display:block}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:18px;margin-bottom:16px}
+form.ask{display:flex;gap:8px}
+form.ask input{flex:1;min-width:0;font:inherit;color:var(--ink);background:var(--bg);border:1px solid var(--line);border-radius:8px;padding:11px 12px}
+form.ask input:focus{outline:2px solid var(--accent);outline-offset:1px}
+.btn{border:0;border-radius:8px;padding:11px 18px;font:inherit;font-weight:600;cursor:pointer;background:var(--accent);color:var(--accent-ink);white-space:nowrap}
+.btn:disabled{opacity:.55;cursor:wait}
+.chips{display:flex;flex-wrap:wrap;gap:6px;margin-top:10px}
+.chips button{border:1px solid var(--line);background:var(--chip);color:var(--ink);border-radius:999px;padding:4px 12px;font:inherit;font-size:13px;cursor:pointer}
+.status{color:var(--muted);font-size:14px;margin-top:10px;min-height:1em}
+.error{background:var(--bad-bg);color:var(--bad);border-radius:8px;padding:10px 14px}
+.answer{line-height:1.7}.answer p:first-child{margin-top:0}.answer ul{padding-left:20px}
+sup.cite a{font-size:11px;font-weight:700;text-decoration:none;color:var(--accent);background:var(--accent-soft);border-radius:4px;padding:0 4px}
+h3{font:600 16px/1.3 Georgia,serif;margin:0 0 10px}
+.src{border-top:1px solid var(--line);padding:10px 0}
+.src:first-of-type{border-top:0}
+.src:target{background:var(--accent-soft);border-radius:6px}
+.src .t{font-weight:600}
+.src .note{display:inline-block;font-size:12px;background:var(--warn-bg);color:var(--warn);border-radius:999px;padding:1px 10px;margin-left:6px}
+.src details{font-size:14px;margin-top:4px}
+.src pre{white-space:pre-wrap;font:13px/1.55 inherit;font-family:inherit;background:var(--bg);border-radius:6px;padding:10px;max-height:320px;overflow:auto}
+.warnbox{background:var(--warn-bg);color:var(--warn);border-radius:8px;padding:8px 12px;font-size:14px;margin-top:12px}
+.verdict{border-radius:8px;padding:12px 14px;font-weight:600;margin-bottom:14px}
+.v-ok{background:var(--ok-bg);color:var(--ok)}.v-warn{background:var(--warn-bg);color:var(--warn)}.v-bad{background:var(--bad-bg);color:var(--bad)}
+.verdict small{display:block;font-weight:400;margin-top:2px}
+.case{border:1px solid var(--line);border-radius:8px;padding:14px;margin-bottom:12px}
+.case .t{font-weight:700}
+.meta{color:var(--muted);font-size:14px}
+.cites{display:flex;flex-wrap:wrap;gap:6px;margin:10px 0}
+.cites span{font-size:13px;background:var(--chip);border-radius:6px;padding:2px 8px}
+.cites span.hit{background:var(--ok-bg);color:var(--ok);font-weight:700}
+.copy{border:1px solid var(--line);background:none;color:var(--ink);border-radius:6px;padding:3px 10px;font:inherit;font-size:13px;cursor:pointer}
+a{color:var(--accent)}
+footer{color:var(--muted);font-size:13px;border-top:1px solid var(--line);padding:14px 0 28px}
+.spinner{display:inline-block;width:13px;height:13px;border:2px solid var(--line);border-top-color:var(--accent);border-radius:50%;animation:spin .8s linear infinite;vertical-align:-2px;margin-right:6px}
+@keyframes spin{to{transform:rotate(360deg)}}
+@media (max-width:520px){form.ask{flex-direction:column}}
+.section-h{font:600 15px/1.3 Georgia,serif;margin:22px 0 10px;color:var(--muted);text-transform:uppercase;letter-spacing:.05em}
+.law{border-top:1px solid var(--line);padding:10px 0}
+.law:first-of-type{border-top:0}
+.law:target{background:var(--accent-soft);border-radius:6px}
+.law .t{font-weight:600}
+.law .note{display:inline-block;font-size:12px;background:var(--warn-bg);color:var(--warn);border-radius:999px;padding:1px 10px;margin-left:6px}
+.law details{font-size:14px;margin-top:4px}
+.law pre,.case pre{white-space:pre-wrap;font:13px/1.55 inherit;font-family:inherit;background:var(--bg);border-radius:6px;padding:10px;max-height:320px;overflow:auto}
+.cited-by{font-size:12px;color:var(--muted);margin-left:6px}
+.snippet{font-size:14px;color:var(--muted);font-style:italic;margin:6px 0}
+details.more>summary{cursor:pointer;color:var(--muted);font-size:14px;margin-top:6px}
+.mode{font-size:13px;color:var(--muted);margin-bottom:8px}
+</style>
+</head>
+<body>
+<header><div class="wrap">
+  <div class="brand"><h1>NyayaSathi</h1><p>Type a topic in plain words and get the relevant laws and leading cases. Free, and runs on your computer.</p></div>
+</div></header>
+
+<main class="wrap">
+  <div class="card">
+    <form class="ask" id="form"><input id="q" placeholder="e.g. murder · land acquisition · posco rape case · Section 420 IPC · Maneka Gandhi (1978) 1 SCC 248" autocomplete="off"><button class="btn">Search</button></form>
+    <div class="chips" id="chips">
+      <button type="button">murder</button>
+      <button type="button">land acquisition</button>
+      <button type="button">posco rape case</button>
+      <button type="button">cheque bounce</button>
+      <button type="button">dowry harassment</button>
+      <button type="button">Section 420 IPC</button>
+      <button type="button">Maneka Gandhi v Union of India (1978) 1 SCC 248</button>
+    </div>
+    <div class="status" id="status"></div>
+  </div>
+  <div id="out"></div>
+</main>
+
+<footer class="wrap">Sources: Indian Kanoon (statute text, old→new criminal law mapping notes, Supreme Court judgments and their citations). Summaries are written by a local AI model (Qwen3 8B via Ollama) from the statute text only. Case details come straight from the judgments. It's a study aid, not legal advice, so open the source before relying on it.</footer>
+
+<script>
+const $ = s => document.querySelector(s);
+const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+const safeUrl = u => /^https:\/\/indiankanoon\.org\//.test(u || "") ? u : null;
+const link = (u, t) => safeUrl(u) ? `<a href="${esc(u)}" target="_blank" rel="noopener">${esc(t)}</a>` : esc(t);
+const mdCite = (text, n, prefix) => DOMPurify.sanitize(marked.parse(text || ""))
+  .replace(/\[(\d{1,2})\]/g, (m, i) => +i >= 1 && +i <= n ? `<sup class="cite"><a href="#${prefix}-${i}">${i}</a></sup>` : m);
+
+// ---------- shared pieces
+function lawItem(s, prefix) {
+  return `<div class="law" id="${prefix}-${s.n}">
+    <span class="t">[${s.n}] ${link(s.url, s.title)}</span>${s.cited_by ? `<span class="cited-by">cited in ${Number(s.cited_by).toLocaleString("en-IN")} judgments</span>` : ""}
+    ${s.note ? `<span class="note">${esc(s.note)}</span>` : ""}
+    <div class="meta">${esc(s.heading)}</div>
+    <details><summary>Read the provision</summary><pre>${esc(s.text)}</pre></details></div>`;
+}
+function caseCard(c) {
+  const name = c.title.replace(/ on \d{1,2} \w+,? \d{4}\s*$/, "");
+  const best = (c.typed_matches || [])[0] || c.citations[0] || "";
+  const year = (c.date.match(/\d{4}$/) || [""])[0];
+  const formatted = `${name}${best ? ", " + best : year ? " (" + year + ")" : ""}`;
+  const hits = new Set((c.typed_matches || []).map(t => t.replace(/\s/g, "")));
+  const cites = c.citations.map(x => `<span class="${[...hits].some(h => h === x.replace(/\s/g, "")) ? "hit" : ""}">${esc(x)}</span>`).join("");
+  return `<div class="case">
+    <div class="t">${link(c.url, name)}${c.cited_by ? `<span class="cited-by">cited by ${Number(c.cited_by).toLocaleString("en-IN")}</span>` : ""}</div>
+    <div class="meta">${esc(c.court)}${c.date ? " · " + esc(c.date) : ""}${c.bench ? " · Bench: " + esc(c.bench) : ""}</div>
+    ${c.snippet ? `<div class="snippet">“…${esc(c.snippet)}…”</div>` : ""}
+    ${cites ? `<div class="cites">${cites}</div>` : `<div class="meta" style="margin:8px 0">No reporter citations listed on Indian Kanoon.</div>`}
+    ${(c.typed_matches || []).length ? `<div class="meta">Matches what you typed: <b>${esc(c.typed_matches.join(", "))}</b></div>` : ""}
+    <div style="margin-top:8px"><button class="copy" data-copy="${esc(formatted)}">Copy citation</button> <span class="meta">${esc(formatted)}</span></div>
+  </div>`;
+}
+
+// ---------- topic: "murder", "land acquisition"
+function renderTopic(d) {
+  const laws = d.laws || [], cases = d.cases || [];
+  const main = laws.filter(l => l.cited), other = laws.filter(l => !l.cited);
+  let html = `<div class="card answer"><div class="mode">Topic: <b>${esc(d.topic)}</b></div>${mdCite(d.overview, laws.length, "law") || "<p>No statute sections found for this topic.</p>"}</div>`;
+  if (laws.length) html += `<div class="card"><h3>Relevant laws</h3>${(main.length ? main : laws).map(l => lawItem(l, "law")).join("")}
+    ${main.length && other.length ? `<details class="more"><summary>Other sections found (${other.length}), possibly less relevant</summary>${other.map(l => lawItem(l, "law")).join("")}</details>` : ""}</div>`;
+  if (cases.length) html += `<div class="card"><h3>Leading Supreme Court cases</h3>
+    <p class="hint" style="margin:0 0 10px;color:var(--muted);font-size:14px">Ranked by how often later judgments cite them. The quoted passage shows why each one matched, so open it to read the holding.</p>
+    ${cases.map(caseCard).join("")}</div>`;
+  return html;
+}
+
+// ---------- a named section: "Section 420 IPC"
+function renderSection(d) {
+  const n = (d.sources || []).length;
+  let html = `<div class="card answer">${mdCite(d.answer, n, "src")}
+    ${d.uncited_warning ? `<div class="warnbox">The model didn't point to specific sources for this answer. Check it against the text below.</div>` : ""}</div>`;
+  if (n) html += `<div class="card"><h3>Sources</h3>${d.sources.map(s => lawItem(s, "src")).join("")}</div>`;
+  return html;
+}
+
+// ---------- a case / citation: verify it
+const VERDICT = {
+  verified: ["v-ok", "Citation verified", "The citation you typed matches this judgment on Indian Kanoon."],
+  partly_verified: ["v-warn", "Partly verified", "Some of the citations you typed match this judgment, others don't."],
+  citation_mismatch: ["v-warn", "Case found, but the citation doesn't match", "Use one of the citations listed for the case below."],
+  name_mismatch: ["v-bad", "This citation belongs to a different case", "Check the case name, or use the correct citation."],
+  found: ["v-ok", "Case found", "All the citations Indian Kanoon lists for it are below."],
+  not_found: ["v-bad", "Not found on Indian Kanoon", "It may be misspelt, very recent or obscure, or fabricated (e.g. by ChatGPT). Don't cite it until you've found the judgment."],
+};
+function renderCitation(d) {
+  const [cls, title, sub] = VERDICT[d.verdict] || ["v-warn", d.verdict, ""];
+  let html = `<div class="card"><div class="verdict ${cls}">${title}<small>${sub}</small></div>`;
+  if (d.typed_citations.length) html += `<div class="meta" style="margin-bottom:10px">Citation(s) detected: ${esc(d.typed_citations.join(", "))}</div>`;
+  html += (d.cases || []).map(caseCard).join("");
+  if ((d.citation_belongs_to || []).length) html += `<h3 style="margin-top:14px">The citation you typed is actually:</h3>` + d.citation_belongs_to.map(caseCard).join("");
+  return html + `</div>`;
+}
+
+// ---------- search
+const STEPS = ["Understanding your question…", "Searching the statutes…", "Finding leading cases…", "Reading the sections…", "Writing a summary…"];
+async function go(q) {
+  q = q.trim(); if (!q) return;
+  $("#q").value = q;
+  const btn = $("#form button"), status = $("#status"), out = $("#out");
+  btn.disabled = true; out.innerHTML = "";
+  let i = 0; status.innerHTML = `<span class="spinner"></span>${STEPS[0]}`;
+  const timer = setInterval(() => { i = Math.min(i + 1, STEPS.length - 1); status.innerHTML = `<span class="spinner"></span>${STEPS[i]}`; }, 7000);
+  const t0 = Date.now();
+  try {
+    const res = await fetch("/api/search", {method: "POST", headers: {"Content-Type": "application/json"}, body: JSON.stringify({q})});
+    const d = await res.json();
+    if (!res.ok || d.error) throw new Error(d.error || "Server error " + res.status);
+    out.innerHTML = d.mode === "citation" ? renderCitation(d) : d.mode === "section" ? renderSection(d) : renderTopic(d);
+    status.textContent = `Done in ${Math.round((Date.now() - t0) / 1000)}s`;
+  } catch (e) {
+    out.innerHTML = `<div class="error">${esc(e.message)}</div>`; status.textContent = "";
+  } finally { clearInterval(timer); btn.disabled = false; }
+}
+$("#form").onsubmit = e => { e.preventDefault(); go($("#q").value); };
+$("#chips").onclick = e => { if (e.target.tagName === "BUTTON") go(e.target.textContent); };
+$("#out").onclick = e => {
+  const b = e.target.closest(".copy"); if (!b) return;
+  navigator.clipboard?.writeText(b.dataset.copy).then(() => { b.textContent = "Copied"; setTimeout(() => b.textContent = "Copy citation", 1500); }).catch(() => {});
+};
+</script>
+</body>
+</html>
